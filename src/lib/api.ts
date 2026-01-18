@@ -21,7 +21,6 @@ api.interceptors.request.use(
     // Admin-specific endpoints that should use adminToken
     const isAdminRequest = 
       url.includes('/orders/all') ||  // Get all orders (admin only)
-      url.match(/\/orders\/[^/]+\/items/) ||  // Get order items (admin only)
       (method !== 'get' && url.match(/\/orders\/[^/]+$/)) ||  // Update order status (admin only - PUT/PATCH /orders/{id})
       (url.includes('/users/') && 
        !url.includes('/login') && 
@@ -31,7 +30,8 @@ api.interceptors.request.use(
        !url.includes('/forgot-password') &&
        !url.includes('/reset-password')) ||  // User management (excluding personal endpoints)
       url.includes('/inventory/') ||  // Inventory management
-      url.includes('/categories/');  // Categories management
+      url.includes('/categories/') ||  // Categories management
+      (method !== 'get' && url.includes('/subcategories/'));  // Subcategory create/update/delete (admin only)
     
     if (isAdminRequest) {
       // Admin request: ONLY use adminToken, do NOT fall back to user token
@@ -48,12 +48,21 @@ api.interceptors.request.use(
         }
       }
     } else {
-      // User-specific: ONLY use regular token, ignore adminToken
+      // Regular request: Use user token, but fall back to adminToken if user token doesn't exist
+      // This handles cases where endpoints support both user and admin access (e.g., /orders/{id}/items)
       const userToken = localStorage.getItem('token');
+      const adminToken = localStorage.getItem('adminToken');
+      
       if (userToken) {
         config.headers.Authorization = `Bearer ${userToken}`;
         if (process.env.NODE_ENV === 'development') {
           console.log(`[API] User request to ${url} - using userToken`);
+        }
+      } else if (adminToken) {
+        // Admin viewing user-accessible endpoints (e.g., viewing specific order items)
+        config.headers.Authorization = `Bearer ${adminToken}`;
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[API] User request to ${url} - using adminToken (fallback)`);
         }
       }
     }
