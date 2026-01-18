@@ -12,6 +12,7 @@ interface CartContextType {
   addToWishlist: (product: Product) => void;
   removeFromWishlist: (productId: string) => void;
   isInWishlist: (productId: string) => boolean;
+  getCartQuantity: (productId: string) => number;
   cartTotal: number;
   cartCount: number;
   loadCart: () => void;
@@ -163,6 +164,11 @@ export const CartProvider = ({ children, user }: CartProviderProps) => {
     return wishlist.some(p => p.id === productId);
   };
 
+  const getCartQuantity = (productId: string): number => {
+    const item = items.find(item => item.product.id === productId);
+    return item ? item.quantity : 0;
+  };
+
   const cartTotal = items.reduce(
     (total, item) => total + item.product.price * item.quantity,
     0
@@ -191,6 +197,7 @@ export const CartProvider = ({ children, user }: CartProviderProps) => {
         addToWishlist,
         removeFromWishlist,
         isInWishlist,
+        getCartQuantity,
         cartTotal,
         cartCount,
         loadCart,

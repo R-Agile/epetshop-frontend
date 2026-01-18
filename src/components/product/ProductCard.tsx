@@ -10,12 +10,19 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
-  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
+  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist, getCartQuantity } = useCart();
   const inWishlist = isInWishlist(product.id);
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
   const discountPercent = hasDiscount
     ? Math.round((1 - product.price / product.originalPrice!) * 100)
     : 0;
+
+  // Stock management
+  const stock = product.stock ?? 0;
+  const cartQuantity = getCartQuantity ? getCartQuantity(product.id) : 0;
+  const isOutOfStock = stock === 0 || !product.inStock;
+  const canAddMore = stock > 0 && cartQuantity < stock;
+  const isLowStock = stock > 0 && stock <= 5;
 
   return (
     <div className="group bg-card rounded-2xl overflow-hidden shadow-soft card-hover border border-border/50">
@@ -30,8 +37,15 @@ const ProductCard = ({ product }: ProductCardProps) => {
           }}
         />
         
-        {/* Discount Badge */}
-        {hasDiscount && (
+        {/* Out of Stock Badge - Top Left */}
+        {isOutOfStock && (
+          <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground font-semibold z-10">
+            Out of Stock
+          </Badge>
+        )}
+
+        {/* Discount Badge - Top Left (only show if not out of stock) */}
+        {!isOutOfStock && hasDiscount && (
           <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground">
             -{discountPercent}%
           </Badge>
@@ -60,11 +74,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
             className="w-full"
             onClick={(e) => {
               e.stopPropagation();
-              addToCart(product);
+              if (canAddMore) {
+                addToCart(product);
+              }
             }}
+            disabled={!canAddMore}
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
-            Add to Cart
+            {isOutOfStock ? 'Out of Stock' : !canAddMore ? 'Max Quantity Reached' : 'Add to Cart'}
           </Button>
         </div>
       </div>
@@ -91,6 +108,15 @@ const ProductCard = ({ product }: ProductCardProps) => {
             ({product.reviewCount})
           </span>
         </div>
+
+        {/* Low Stock Warning */}
+        {isLowStock && !isOutOfStock && (
+          <div className="mb-3">
+            <Badge variant="outline" className="text-orange-600 border-orange-600 bg-orange-50 dark:bg-orange-950">
+              Only {stock} left!
+            </Badge>
+          </div>
+        )}
 
         {/* Price */}
         <div className="flex items-center gap-2">

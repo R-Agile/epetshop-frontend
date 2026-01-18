@@ -40,44 +40,58 @@ const Cart = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {items.map((item) => (
-              <div
-                key={item.product.id}
-                className="bg-card rounded-2xl p-4 md:p-6 shadow-soft border border-border flex gap-4"
-              >
-                <img
-                  src={item.product.image || 'https://via.placeholder.com/300'}
-                  alt={item.product.name}
-                  className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-xl"
-                />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground mb-1 truncate">
-                    {item.product.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-3 capitalize">
-                    {item.product.petCategory} • {item.product.productCategory}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
+            {items.map((item) => {
+              const stock = item.product.stock ?? 0;
+              const isOutOfStock = stock === 0 || !item.product.inStock;
+              const canIncrease = item.quantity < stock;
+
+              return (
+                <div
+                  key={item.product.id}
+                  className="bg-card rounded-2xl p-4 md:p-6 shadow-soft border border-border flex gap-4"
+                >
+                  <img
+                    src={item.product.image || 'https://via.placeholder.com/300'}
+                    alt={item.product.name}
+                    className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-xl"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground mb-1 truncate">
+                      {item.product.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-3 capitalize">
+                      {item.product.petCategory} • {item.product.productCategory}
+                    </p>
+                    
+                    {/* Stock warning */}
+                    {isOutOfStock && (
+                      <p className="text-xs text-destructive mb-2">Out of Stock</p>
+                    )}
+                    {!isOutOfStock && stock <= 5 && (
+                      <p className="text-xs text-orange-600 mb-2">Only {stock} left!</p>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="w-8 text-center font-medium">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          disabled={!canIncrease}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     
                     <div className="flex items-center gap-4">
                       <span className="font-bold text-primary text-lg">
@@ -95,7 +109,8 @@ const Cart = () => {
                   </div>
                 </div>
               </div>
-            ))}
+            );
+            })}
 
             <Button variant="ghost" onClick={clearCart} className="text-muted-foreground">
               Clear Cart

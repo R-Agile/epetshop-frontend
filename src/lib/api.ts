@@ -99,24 +99,40 @@ api.interceptors.response.use(
       const isLoginEndpoint = error.config?.url?.includes('/login') || error.config?.url?.includes('/register');
       
       if (!isLoginEndpoint) {
-        // Only clear tokens if we had a token (meaning it's invalid/expired)
-        const userToken = localStorage.getItem('token');
-        const adminToken = localStorage.getItem('adminToken');
+        const url = error.config?.url || '';
+        const method = error.config?.method || 'get';
         
-        if (userToken || adminToken) {
-          // Clear user session
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          
-          // Clear admin session
+        // Determine if this was an admin-only request
+        const isAdminRequest = 
+          url.includes('/orders/all') ||
+          (method !== 'get' && url.match(/\/orders\/[^/]+$/)) ||
+          (url.includes('/users/') && 
+           !url.includes('/login') && 
+           !url.includes('/register') && 
+           !url.includes('/users/me') &&
+           !url.includes('/change-password') &&
+           !url.includes('/forgot-password') &&
+           !url.includes('/reset-password')) ||
+          url.includes('/inventory/') ||
+          url.includes('/categories/') ||
+          (method !== 'get' && url.includes('/subcategories/'));
+        
+        if (isAdminRequest) {
+          // Clear only admin session
           localStorage.removeItem('adminToken');
           localStorage.removeItem('adminUser');
           
-          // Redirect based on current location
-          const currentPath = window.location.pathname;
-          if (currentPath.startsWith('/admin')) {
+          // Redirect to admin login
+          if (window.location.pathname.startsWith('/admin')) {
             window.location.href = '/admin/login';
-          } else if (currentPath !== '/auth') {
+          }
+        } else {
+          // Clear only user session
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          
+          // Redirect to user login
+          if (window.location.pathname !== '/auth') {
             window.location.href = '/auth';
           }
         }
