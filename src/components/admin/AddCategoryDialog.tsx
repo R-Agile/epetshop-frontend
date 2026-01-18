@@ -148,6 +148,17 @@ export const AddCategoryDialog = ({ onCategoryAdded }: AddCategoryDialogProps) =
               onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
               placeholder="https://example.com/category-image.jpg"
             />
+            <p className="text-xs text-muted-foreground">Enter a valid image URL for the category</p>
+            {formData.image_url && formData.image_url.trim() !== '' && (
+              <img 
+                src={formData.image_url} 
+                alt="Preview" 
+                className="w-20 h-20 object-cover rounded border mt-2"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            )}
           </div>
 
           <div className="flex items-center space-x-2">

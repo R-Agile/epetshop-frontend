@@ -229,9 +229,12 @@ const AdminInventory = () => {
                   <TableRow key={item.id}>
                     <TableCell>
                       <img
-                        src={item.image}
+                        src={item.image || 'https://via.placeholder.com/100?text=No+Image'}
                         alt={item.name}
                         className="w-12 h-12 rounded-lg object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://via.placeholder.com/100?text=No+Image';
+                        }}
                       />
                     </TableCell>
                     <TableCell className="font-medium">{item.name}</TableCell>
@@ -245,9 +248,10 @@ const AdminInventory = () => {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => {
+                          onClick={async () => {
                             setUpdatingStock(item.id);
-                            updateStock(item.id, item.stock - 1).finally(() => setUpdatingStock(null));
+                            await updateStock(item.id, item.stock - 1);
+                            setUpdatingStock(null);
                           }}
                           disabled={item.stock === 0 || updatingStock === item.id}
                         >
@@ -258,9 +262,10 @@ const AdminInventory = () => {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => {
+                          onClick={async () => {
                             setUpdatingStock(item.id);
-                            updateStock(item.id, item.stock + 1).finally(() => setUpdatingStock(null));
+                            await updateStock(item.id, item.stock + 1);
+                            setUpdatingStock(null);
                           }}
                           disabled={updatingStock === item.id}
                         >

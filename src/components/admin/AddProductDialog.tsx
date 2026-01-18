@@ -266,11 +266,25 @@ export const AddProductDialog = ({ onProductAdded, categories }: AddProductDialo
           <div className="space-y-2">
             <Label>Product Image URL</Label>
             <Input
-              value={formData.images[0]}
+              value={formData.images[0] || ''}
               onChange={(e) => setFormData({ ...formData, images: [e.target.value] })}
               placeholder="https://example.com/image.jpg"
             />
-            <p className="text-xs text-muted-foreground">Enter image URL or upload will be added later</p>
+            <p className="text-xs text-muted-foreground">
+              ✅ Works: Direct image URLs (ending in .jpg, .png, etc.), Imgur, Cloudinary<br/>
+              ✅ Works: Google Drive share links (will be auto-converted)<br/>
+              ⚠️ Unsplash: Use "Download" → "Copy Image Address" instead of page URL
+            </p>
+            {formData.images[0] && formData.images[0].trim() !== '' && (
+              <img 
+                src={formData.images[0]} 
+                alt="Preview" 
+                className="w-20 h-20 object-cover rounded border mt-2"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            )}
           </div>
 
           <div className="flex justify-end gap-2">

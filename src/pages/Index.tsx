@@ -67,7 +67,7 @@ const Index = () => {
       // Count products for each category
       const categoriesWithCounts = categoriesData.map(cat => {
         const productCount = inventoryData.filter(
-          item => item.category_id === (cat._id || cat.id) && item.is_visible
+          item => item.category_id === cat._id && item.is_visible
         ).length;
         return {
           ...cat,
@@ -92,6 +92,12 @@ const Index = () => {
         .filter(item => item.is_visible)
         .map(item => {
           const category = categoriesData.find(c => c._id === item.category_id);
+          
+          // Debug logging
+          console.log('Index - Processing item:', item.name);
+          console.log('Index - Item images:', item.images);
+          console.log('Index - First image:', item.images?.[0]);
+          
           return productService.convertToProduct(
             item,
             category?.name || 'General',

@@ -257,9 +257,21 @@ export const EditProductDialog = ({
           <div className="space-y-2">
             <Label>Product Image URL</Label>
             <Input
-              value={formData.images[0]}
+              value={formData.images[0] || ''}
               onChange={(e) => setFormData({ ...formData, images: [e.target.value] })}
+              placeholder="https://example.com/image.jpg"
             />
+            <p className="text-xs text-muted-foreground">Enter a valid image URL</p>
+            {formData.images[0] && formData.images[0].trim() !== '' && (
+              <img 
+                src={formData.images[0]} 
+                alt="Preview" 
+                className="w-20 h-20 object-cover rounded border mt-2"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            )}
           </div>
 
           <div className="flex justify-end gap-2">

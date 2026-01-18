@@ -1,5 +1,6 @@
 import api from '@/lib/api';
 import { Product } from '@/types';
+import { convertToDirectImageUrl } from '@/lib/imageUtils';
 
 export interface InventoryItem {
   _id: string;
@@ -63,12 +64,15 @@ export const productService = {
 
   // Helper function to convert backend inventory to frontend Product format
   convertToProduct(item: InventoryItem, categoryName: string, subcategoryName: string): Product {
+    const rawImage = item.images?.[0] || '';
+    const directImageUrl = rawImage ? convertToDirectImageUrl(rawImage) : 'https://placehold.co/300x300/e5e5e5/666?text=No+Image';
+    
     return {
       id: item._id,
       name: item.name,
       price: item.price,
       originalPrice: item.discount && item.discount > 0 ? item.price / (1 - item.discount / 100) : undefined,
-      image: item.images?.[0] || 'https://via.placeholder.com/300',
+      image: directImageUrl,
       petCategory: categoryName.toLowerCase() as any,
       productCategory: (subcategoryName || 'accessories').toLowerCase() as any,
       rating: item.rating || 4.5,

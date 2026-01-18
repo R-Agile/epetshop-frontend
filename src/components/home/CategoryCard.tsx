@@ -29,9 +29,12 @@ const CategoryCard = ({ category, image, productCount }: CategoryCardProps) => {
       className="group relative overflow-hidden rounded-2xl aspect-square card-hover"
     >
       <img
-        src={image}
+        src={image || 'https://via.placeholder.com/600?text=' + label}
         alt={label}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        onError={(e) => {
+          e.currentTarget.src = 'https://via.placeholder.com/600?text=' + label;
+        }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-soft-brown/90 via-soft-brown/40 to-transparent" />
       <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-center">

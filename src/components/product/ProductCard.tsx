@@ -22,9 +22,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-muted">
         <img
-          src={product.image}
+          src={product.image || 'https://via.placeholder.com/300?text=No+Image'}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={(e) => {
+            e.currentTarget.src = 'https://placehold.co/300x300/e5e5e5/666?text=No+Image';
+          }}
         />
         
         {/* Discount Badge */}

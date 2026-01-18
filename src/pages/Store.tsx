@@ -8,6 +8,7 @@ import ProductCard from '@/components/product/ProductCard';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { Product, PetCategory, ProductCategory } from '@/types';
 import api from '@/lib/api';
+import { convertToDirectImageUrl } from '@/lib/imageUtils';
 
 const Store = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,12 +43,23 @@ const Store = () => {
         .filter((item: any) => item.is_visible)
         .map((item: any) => {
           const category = categoriesData.data.find((c: any) => c._id === item.category_id);
+          
+          // Convert image URL to direct URL
+          const rawImage = item.images?.[0] || '';
+          const directImageUrl = rawImage ? convertToDirectImageUrl(rawImage) : 'https://placehold.co/300x300/e5e5e5/666?text=No+Image';
+          
+          // Debug logging
+          console.log('Processing item:', item.name);
+          console.log('Item images field:', item.images);
+          console.log('First image:', item.images?.[0]);
+          console.log('Converted to:', directImageUrl);
+          
           return {
             id: item._id,
             name: item.name,
             price: item.price,
             originalPrice: item.discount > 0 ? item.price / (1 - item.discount / 100) : undefined,
-            image: item.images?.[0] || 'https://via.placeholder.com/300',
+            image: directImageUrl,
             petCategory: category?.name?.toLowerCase() || 'general',
             productCategory: item.subcategory || 'accessories',
             rating: item.rating || 4.5,

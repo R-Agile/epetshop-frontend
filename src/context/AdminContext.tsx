@@ -14,16 +14,16 @@ interface AdminContextType {
   // Inventory
   inventory: InventoryItem[];
   loadInventory: () => Promise<void>;
-  updateStock: (productId: string, stock: number) => void;
-  toggleVisibility: (productId: string) => void;
+  updateStock: (productId: string, stock: number) => Promise<void>;
+  toggleVisibility: (productId: string) => Promise<void>;
   
   // Users
   users: AdminUser[];
-  updateUserStatus: (userId: string, status: 'active' | 'inactive' | 'banned') => void;
+  updateUserStatus: (userId: string, status: 'active' | 'inactive' | 'banned') => Promise<void>;
   
   // Orders
   orders: Order[];
-  updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   
   // Stats
   stats: {
@@ -117,20 +117,25 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await api.get('/inventory/');
       
-      const inventoryData = (response.data || []).map((item: any) => ({
-        id: item._id,
-        name: item.name || 'Unknown',
-        petCategory: item.category_id || 'general',
-        productCategory: item.subcategory || 'accessories',
-        price: parseFloat(item.price) || 0,
-        stock: parseInt(item.stock) || 0,
-        image: item.images?.[0] || 'https://via.placeholder.com/150',
-        isVisible: item.is_visible !== false,
-        description: item.description,
-        brand: item.brand,
-        weight: item.weight,
-        age_range: item.age_range,
-      }));
+      console.log('AdminContext - Raw inventory response:', response.data);
+      
+      const inventoryData = (response.data || []).map((item: any) => {
+        console.log('AdminContext - Item:', item.name, 'Images:', item.images);
+        return {
+          id: item._id,
+          name: item.name || 'Unknown',
+          petCategory: item.category_id || 'general',
+          productCategory: item.subcategory || 'accessories',
+          price: parseFloat(item.price) || 0,
+          stock: parseInt(item.stock) || 0,
+          image: item.images?.[0] || 'https://via.placeholder.com/150',
+          isVisible: item.is_visible !== false,
+          description: item.description,
+          brand: item.brand,
+          weight: item.weight,
+          age_range: item.age_range,
+        };
+      });
       setInventory(inventoryData);
     } catch (error: any) {
       console.error('Failed to load inventory:', error);
