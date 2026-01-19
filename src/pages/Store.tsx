@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import ProductCard from '@/components/product/ProductCard';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
-import { Product, PetCategory, ProductCategory } from '@/types';
+import { Product, PetCategory } from '@/types';
 import api from '@/lib/api';
 import { convertToDirectImageUrl } from '@/lib/imageUtils';
 
@@ -15,13 +15,14 @@ const Store = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const selectedPet = searchParams.get('pet') as PetCategory | null;
-  const selectedCategory = searchParams.get('category') as ProductCategory | null;
+  const selectedCategory = searchParams.get('category') as string | null;
 
   // Load data from backend
   useEffect(() => {
@@ -31,9 +32,10 @@ const Store = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [inventoryData, categoriesData] = await Promise.all([
+      const [inventoryData, categoriesData, subcategoriesData] = await Promise.all([
         api.get('/inventory/'),
         api.get('/categories/'),
+        api.get('/subcategories/'),
       ]);
 
       setCategories(categoriesData.data);
@@ -43,6 +45,7 @@ const Store = () => {
         .filter((item: any) => item.is_visible)
         .map((item: any) => {
           const category = categoriesData.data.find((c: any) => c._id === item.category_id);
+          const subcategory = subcategoriesData.data.find((s: any) => s._id === item.subcategory_id);
           
           // Convert image URL to direct URL
           const rawImage = item.images?.[0] || '';
@@ -61,9 +64,9 @@ const Store = () => {
             originalPrice: item.discount > 0 ? item.price / (1 - item.discount / 100) : undefined,
             image: directImageUrl,
             petCategory: category?.name?.toLowerCase() || 'general',
-            productCategory: item.subcategory || 'accessories',
-            rating: item.rating || 4.5,
-            reviewCount: item.num_reviews || 0,
+            productCategory: subcategory?.name || 'general',
+            rating: item.rating || undefined,
+            reviewCount: item.num_reviews || undefined,
             inStock: item.stock > 0,
             description: item.description,
             stock: item.stock,
@@ -75,6 +78,7 @@ const Store = () => {
         });
 
       setProducts(productsList);
+      setSubcategories(subcategoriesData.data);
     } catch (error) {
       console.error('Failed to load products:', error);
     } finally {
@@ -99,12 +103,16 @@ const Store = () => {
   }, [categories]);
 
   const productCategories = useMemo(() => {
-    return [
-      { value: 'food', label: 'Food' },
-      { value: 'toys', label: 'Toys' },
-      { value: 'accessories', label: 'Accessories' },
-    ];
-  }, []);
+    // Get unique subcategory names from the subcategories data
+    const uniqueSubcategories = Array.from(
+      new Set(subcategories.map(sub => sub.name))
+    ).sort();
+    
+    return uniqueSubcategories.map(name => ({
+      value: name,
+      label: name.charAt(0).toUpperCase() + name.slice(1),
+    }));
+  }, [subcategories]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {

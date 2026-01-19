@@ -100,14 +100,16 @@ const ProductCard = ({ product }: ProductCardProps) => {
           {product.name}
         </h3>
         
-        {/* Rating */}
-        <div className="flex items-center gap-1 mb-3">
-          <Star className="h-4 w-4 fill-accent text-accent" />
-          <span className="text-sm font-medium">{product.rating}</span>
-          <span className="text-sm text-muted-foreground">
-            ({product.reviewCount})
-          </span>
-        </div>
+        {/* Rating - Only show if there are reviews */}
+        {product.reviewCount && product.reviewCount > 0 && (
+          <div className="flex items-center gap-1 mb-3">
+            <Star className="h-4 w-4 fill-accent text-accent" />
+            <span className="text-sm font-medium">{product.rating?.toFixed(1)}</span>
+            <span className="text-sm text-muted-foreground">
+              ({product.reviewCount})
+            </span>
+          </div>
+        )}
 
         {/* Low Stock Warning */}
         {isLowStock && !isOutOfStock && (

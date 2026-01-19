@@ -138,49 +138,6 @@ const About = () => {
           </div>
         </div>
       </section>
-
-      {/* Team Section */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-            Meet Our <span className="text-primary">Team</span>
-          </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto mb-12">
-            The passionate pet lovers behind PawStore
-          </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {[
-              {
-                name: 'Sarah Johnson',
-                role: 'Founder & CEO',
-                image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop',
-              },
-              {
-                name: 'Michael Chen',
-                role: 'Head of Products',
-                image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop',
-              },
-              {
-                name: 'Emily Davis',
-                role: 'Customer Care Lead',
-                image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop',
-              },
-            ].map((member, index) => (
-              <div key={index} className="text-center">
-                <img
-                  src={member.image}
-                  alt={member.name}
-                  className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-primary/20"
-                />
-                <h3 className="font-display font-bold text-foreground text-lg">
-                  {member.name}
-                </h3>
-                <p className="text-muted-foreground text-sm">{member.role}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
     </div>
   );
 };

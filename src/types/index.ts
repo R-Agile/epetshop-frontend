@@ -9,9 +9,9 @@ export interface Product {
   originalPrice?: number;
   image: string;
   petCategory: PetCategory;
-  productCategory: ProductCategory;
-  rating: number;
-  reviewCount: number;
+  productCategory: string;
+  rating?: number;
+  reviewCount?: number;
   inStock: boolean;
   description?: string;
   stock?: number;
