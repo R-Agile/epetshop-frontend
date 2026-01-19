@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, MoreVertical, UserCheck, UserX, Ban, Mail } from 'lucide-react';
+import { Search, MoreVertical, UserCheck, UserX, Ban, Mail, User } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Input } from '@/components/ui/input';
@@ -76,7 +76,6 @@ const AdminUsers = () => {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
                 <SelectItem value="banned">Banned</SelectItem>
               </SelectContent>
             </Select>
@@ -102,10 +101,9 @@ const AdminUsers = () => {
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={user.avatar} />
-                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
+                      <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
                       <span className="font-medium">{user.name}</span>
                     </div>
                   </TableCell>
@@ -134,10 +132,6 @@ const AdminUsers = () => {
                           <UserCheck className="w-4 h-4 mr-2 text-green-500" />
                           Set Active
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateUserStatus(user.id, 'inactive')}>
-                          <UserX className="w-4 h-4 mr-2 text-yellow-500" />
-                          Set Inactive
-                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           onClick={() => updateUserStatus(user.id, 'banned')}
@@ -145,11 +139,6 @@ const AdminUsers = () => {
                         >
                           <Ban className="w-4 h-4 mr-2" />
                           Ban User
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <Mail className="w-4 h-4 mr-2" />
-                          Send Email
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

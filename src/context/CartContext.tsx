@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, Product, User } from '@/types';
 import { toast } from 'sonner';
+import api from '@/lib/api';
 
 interface CartContextType {
   items: CartItem[];
@@ -30,6 +31,7 @@ export const CartProvider = ({ children, user }: CartProviderProps) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<Product[]>([]);
   const [guestId, setGuestId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Initialize guest ID from localStorage or create new one
   useEffect(() => {
@@ -43,7 +45,7 @@ export const CartProvider = ({ children, user }: CartProviderProps) => {
     }
   }, []);
 
-  // Load guest cart/wishlist on mount
+  // Load guest cart/wishlist on mount - from DB first, then localStorage
   useEffect(() => {
     if (guestId) {
       loadGuestCart();
@@ -51,44 +53,103 @@ export const CartProvider = ({ children, user }: CartProviderProps) => {
     }
   }, [guestId]);
 
-  const loadGuestCart = () => {
-    const stored = localStorage.getItem(`guestCart_${guestId}`);
-    if (stored) {
-      try {
-        setItems(JSON.parse(stored));
-      } catch (error) {
-        console.error('Failed to parse guest cart:', error);
-        localStorage.removeItem(`guestCart_${guestId}`);
+  const loadGuestCart = async () => {
+    try {
+      setIsLoading(true);
+      // Try to load from DB via API
+      if (guestId) {
+        try {
+          const response = await api.get(`/cart/${guestId}`);
+          if (response.data && response.data.items) {
+            setItems(response.data.items);
+            // Also save to localStorage for quick access
+            localStorage.setItem(`guestCart_${guestId}`, JSON.stringify(response.data.items));
+            return;
+          }
+        } catch (error) {
+          console.log('DB cart not found, loading from localStorage');
+        }
       }
+      
+      // Fallback to localStorage if DB fails or not found
+      const stored = localStorage.getItem(`guestCart_${guestId}`);
+      if (stored) {
+        try {
+          setItems(JSON.parse(stored));
+        } catch (error) {
+          console.error('Failed to parse guest cart:', error);
+          localStorage.removeItem(`guestCart_${guestId}`);
+        }
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const loadGuestWishlist = () => {
-    const stored = localStorage.getItem(`guestWishlist_${guestId}`);
-    if (stored) {
-      try {
-        setWishlist(JSON.parse(stored));
-      } catch (error) {
-        console.error('Failed to parse guest wishlist:', error);
-        localStorage.removeItem(`guestWishlist_${guestId}`);
+  const loadGuestWishlist = async () => {
+    try {
+      setIsLoading(true);
+      // Try to load from DB via API
+      if (guestId) {
+        try {
+          const response = await api.get(`/wishlist/guest/${guestId}`);
+          if (response.data && response.data.items && response.data.items.length > 0) {
+            // Items from DB are product IDs, need to convert back to Product objects
+            // For now, store them as-is and the component will handle resolution
+            setWishlist(response.data.items);
+            // Also save to localStorage for quick access
+            localStorage.setItem(`guestWishlist_${guestId}`, JSON.stringify(response.data.items));
+            return;
+          }
+        } catch (error) {
+          console.log('DB wishlist not found, loading from localStorage');
+        }
       }
+      
+      // Fallback to localStorage if DB fails or not found
+      const stored = localStorage.getItem(`guestWishlist_${guestId}`);
+      if (stored) {
+        try {
+          setWishlist(JSON.parse(stored));
+        } catch (error) {
+          console.error('Failed to parse guest wishlist:', error);
+          localStorage.removeItem(`guestWishlist_${guestId}`);
+        }
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const saveGuestCart = (cartItems: CartItem[]) => {
+  const saveGuestCart = async (cartItems: CartItem[]) => {
     if (guestId) {
+      // Save to localStorage immediately (quick access)
       localStorage.setItem(`guestCart_${guestId}`, JSON.stringify(cartItems));
+      
+      // Also sync to DB in background
+      try {
+        await api.post(`/cart/${guestId}/sync`, { items: cartItems });
+      } catch (error) {
+        console.error('Failed to sync cart to DB:', error);
+        // Cart still works locally even if DB sync fails
+      }
     }
   };
 
   const saveGuestWishlist = (wishlistItems: Product[]) => {
+    // Immediate localStorage save for fast UI update
     if (guestId) {
       localStorage.setItem(`guestWishlist_${guestId}`, JSON.stringify(wishlistItems));
+      
+      // Background DB sync
+      const itemIds = wishlistItems.map(item => item.id);
+      api.post(`/wishlist/guest/${guestId}/sync`, { items: itemIds })
+        .catch((error) => console.error('Failed to sync wishlist to DB:', error));
     }
   };
 
-  const addToCart = (product: Product, quantity = 1) => {
-    // Using localStorage for all users (guest and logged-in)
+  const addToCart = async (product: Product, quantity = 1) => {
+    // Update React state immediately (optimistic update)
     setItems(prev => {
       const existing = prev.find(item => item.product.id === product.id);
       let newItems;
@@ -103,6 +164,7 @@ export const CartProvider = ({ children, user }: CartProviderProps) => {
         toast.success(`Added ${product.name} to cart`);
         newItems = [...prev, { product, quantity }];
       }
+      // Save both to localStorage and DB
       saveGuestCart(newItems);
       return newItems;
     });
@@ -132,10 +194,16 @@ export const CartProvider = ({ children, user }: CartProviderProps) => {
     });
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setItems([]);
     if (guestId) {
       localStorage.removeItem(`guestCart_${guestId}`);
+      // Also clear from DB
+      try {
+        await api.delete(`/cart/${guestId}`);
+      } catch (error) {
+        console.error('Failed to clear cart from DB:', error);
+      }
     }
     toast.info('Cart cleared');
   };

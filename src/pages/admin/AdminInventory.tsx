@@ -43,6 +43,8 @@ const AdminInventory = () => {
   const [categoryToEdit, setCategoryToEdit] = useState<any>(null);
   const [editCategoryDialogOpen, setEditCategoryDialogOpen] = useState(false);
   const [updatingStock, setUpdatingStock] = useState<string | null>(null);
+  const [productToDelete, setProductToDelete] = useState<any>(null);
+  const [deleteProductDialogOpen, setDeleteProductDialogOpen] = useState(false);
 
   useEffect(() => {
     loadCategories();
@@ -88,6 +90,27 @@ const AdminInventory = () => {
 
   const toggleCategorySelection = (categoryId: string) => {
     setSelectedCategory(prev => prev === categoryId ? null : categoryId);
+  };
+
+  const handleDeleteProduct = (product: any) => {
+    setProductToDelete(product);
+    setDeleteProductDialogOpen(true);
+  };
+
+  const deleteProduct = async () => {
+    if (!productToDelete) return;
+
+    try {
+      await api.delete(`/inventory/${productToDelete.id}`);
+      toast.success('Product deleted successfully!');
+      loadInventory();
+    } catch (error: any) {
+      console.error('Failed to delete product:', error);
+      toast.error(error.response?.data?.detail || 'Failed to delete product');
+    } finally {
+      setDeleteProductDialogOpen(false);
+      setProductToDelete(null);
+    }
   };
 
   const filteredInventory = inventory.filter(item => {
@@ -292,17 +315,26 @@ const AdminInventory = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedProduct(item);
-                          setEditDialogOpen(true);
-                        }}
-                      >
-                        <Package className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedProduct(item);
+                            setEditDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteProduct(item)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -371,6 +403,27 @@ const AdminInventory = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={deleteCategory}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Product Confirmation Dialog */}
+      <AlertDialog open={deleteProductDialogOpen} onOpenChange={setDeleteProductDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{productToDelete?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteProduct}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete

@@ -103,12 +103,9 @@ const Navbar = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 px-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.avatar} />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {user?.name?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
                     <ChevronDown className="h-4 w-4 hidden md:block" />
                   </Button>
                 </DropdownMenuTrigger>

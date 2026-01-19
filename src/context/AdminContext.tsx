@@ -99,13 +99,31 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
           id: user._id,
           name: user.full_name || 'Unknown',
           email: user.email || '',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email || 'default'}`,
+          avatar: 'user-icon',
           joinDate: user.register_time,
           totalOrders: 0,
           totalSpent: 0,
           status: user.status || 'active',
         }));
-      setUsers(usersData);
+      
+      // Fetch order summary for each user
+      const usersWithSummary = await Promise.all(
+        usersData.map(async (user: any) => {
+          try {
+            const summaryResponse = await api.get(`/users/user/${user.id}/summary`);
+            return {
+              ...user,
+              totalOrders: summaryResponse.data.total_orders || 0,
+              totalSpent: summaryResponse.data.total_spent || 0,
+            };
+          } catch (error) {
+            console.error(`Failed to load summary for user ${user.id}:`, error);
+            return user;
+          }
+        })
+      );
+      
+      setUsers(usersWithSummary);
     } catch (error: any) {
       console.error('Failed to load users:', error);
       toast.error('Failed to load users');

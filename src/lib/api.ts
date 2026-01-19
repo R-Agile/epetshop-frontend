@@ -26,9 +26,11 @@ api.interceptors.request.use(
        !url.includes('/login') && 
        !url.includes('/register') && 
        !url.includes('/users/me') &&
+       !url.includes('/users/avatar') &&
        !url.includes('/change-password') &&
        !url.includes('/forgot-password') &&
-       !url.includes('/reset-password')) ||  // User management (excluding personal endpoints)
+       !url.includes('/reset-password') &&
+       !url.includes('/user/')) ||  // User management (excluding personal endpoints)
       url.includes('/inventory/') ||  // Inventory management
       url.includes('/categories/') ||  // Categories management
       (method !== 'get' && url.includes('/subcategories/'));  // Subcategory create/update/delete (admin only)
